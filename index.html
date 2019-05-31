@@ -1,16 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>jQuery AJAX загрузка файла на сервер</title>
+
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+
+    <style>.wrapper{ text-align: center; margin:2em; }</style>
+
+    <script type='text/javascript' src='//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>
+
+    <style>
+        .button{ text-decoration: none; background:#666; padding:.3em 1em; border-radius: .3em; color:#fff; }
+        .ajax-reply{ margin-top:2em; }
+
+        #sdvig{
+            margin-left: 40%;
+            margin-top: 300px;
+            border: 1px solid red;
+            width: 500px;
+            height: 200px;
+        }
+        #space1{
+            margin-top: 10px;
+        }
+        #space2{
+            margin-top: 10px;
+        }
+        #space3{
+            margin-top: 10px;
+        }
+
+        #button{
+            margin-left: 200px;
+        }
+    </style>
+</head>d
 <body>
+
+
+
+<div id="sdvig">
 <form method="post" action="logik.php">
-    <input type="text" name="first"/>
-    <input type="text" name="plus"/>
-    <input type="text" name="second"/>
-    <input type="submit" value="отправить">
+
+    <div>
+        Name <input  name="name_user" type="text">
+    </div>
+    <div id="space1"></div>
+    <div >
+        surname <input type="text" name="surname">
+    </div>
+    <div id="space2"></div>
+    <div >
+        Date<input type="date" name="date">
+    </div>
+    <div id="space3"></div>
+
+    <div>
+        <input id="button" type="submit" value="отправить">
+    </div>
+
+
+    <div class="wrapper">
+        <input type="file" multiple="multiple" accept=".txt,image/*">
+        <a href="#" class="upload_files button">Загрузить файлы</a>
+        <div class="ajax-reply"></div>
+    </div>
+
 </form>
+
+</div>
+
+
+
+
+
+<script>
+    (function($){
+        var files; // переменная. будет содержать данные файлов
+// заполняем переменную данными файлов, при изменении значения file поля
+        $('input[type=file]').on('change', function(){
+            files = this.files;
+        });
+// обработка и отправка AJAX запроса при клике на кнопку upload_files
+        $('.upload_files').on( 'click', function( event ){
+            event.stopPropagation(); // остановка всех текущих JS событий
+            event.preventDefault();  // остановка дефолтного события для текущего элемента - клик для <a> тега
+            // ничего не делаем если files пустой
+            if( typeof files == 'undefined' ) return;
+            // создадим данные файлов в подходящем для отправки формате
+            var data = new FormData();
+            $.each( files, function( key, value ){
+                data.append( key, value );
+            });
+            // добавим переменную идентификатор запроса
+            data.append( 'my_file_upload', 1 );
+            // AJAX запрос
+            $.ajax({
+                url         : 'logik.php',
+                //отправка на сервер
+                type        : 'POST',
+                data        : data,
+                cache       : false,
+                dataType    : 'json',
+                // отключаем обработку передаваемых данных, пусть передаются как есть
+                processData : false,
+                // отключаем установку заголовка типа запроса. Так jQuery скажет серверу что это строковой запрос
+                contentType : false,
+                // функция успешного ответа сервера
+                success     : function( respond, status, jqXHR ){
+                    // ОК
+                    if( typeof respond.error === 'undefined' ){
+                        // файлы загружены, делаем что-нибудь
+                        // покажем пути к загруженным файлам в блок '.ajax-reply'
+                        var files_path = respond.files;
+                        var html = '';
+                        $.each( files_path, function( key, val ){
+                            html += val +'<br>';
+                        } )
+
+                        $('.ajax-reply').html( html );
+                    }
+                    // error
+                    else {
+                        console.log('ОШИБКА: ' + respond.error );
+                    }
+                },
+                // функция ошибки ответа сервера
+                error: function( jqXHR, status, errorThrown ){
+                    console.log( 'ОШИБКА AJAX запроса: ' + status, jqXHR );
+                }
+            });
+        });
+    })(jQuery)
+</script>
 
 </body>
 </html>
